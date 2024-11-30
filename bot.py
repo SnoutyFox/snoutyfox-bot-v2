@@ -1,5 +1,5 @@
 import tweepy
-import time
+import os
 import random
 import logging
 
@@ -32,46 +32,29 @@ messages = [
     "🔮 Sniff the future with SnoutyFox! Your chance to join the meme coin movement is here: https://t.me/snoutyfoxcoin",
 ]
 
-# Δημοσίευση Tweet
+# Δημοσίευση Tweet με Εικόνα
 def post_tweet():
-    message = random.choice(messages)
     try:
-        response = client.create_tweet(text=message)
+        # Επιλέγουμε τυχαίο μήνυμα
+        message = random.choice(messages)
+        
+        # Βρίσκουμε τυχαία εικόνα από τον φάκελο images
+        image_path = os.path.join("images", random.choice(os.listdir("images")))
+        
+        # Μεταφόρτωση εικόνας
+        media = client.media_upload(image_path)
+        
+        # Δημοσίευση tweet με την εικόνα
+        response = client.create_tweet(text=message, media_ids=[media.media_id])
         logging.info(f"Tweet posted successfully: {response.data['id']}")
-    except tweepy.TweepyException as e:
+    except Exception as e:
         logging.error(f"Failed to post tweet: {e}")
-
-# Σχόλιο σε Tweets
-def comment_on_tweets():
-    keywords = ["crypto", "memes", "meme coin", "cryptocurrency"]
-    for keyword in keywords:
-        try:
-            response = client.search_recent_tweets(query=keyword, max_results=5)
-            if response.data:
-                for tweet in response.data:
-                    try:
-                        reply_message = f"🔥 SnoutyFox is the ultimate meme coin! Check it out: https://t.me/snoutyfoxcoin"
-                        client.create_tweet(
-                            text=reply_message,
-                            in_reply_to_tweet_id=tweet.id
-                        )
-                        logging.info(f"Commented on tweet ID: {tweet.id}")
-                    except tweepy.TweepyException as e:
-                        logging.error(f"Failed to comment on tweet ID {tweet.id}: {e}")
-        except tweepy.TweepyException as e:
-            logging.error(f"Error searching tweets for keyword '{keyword}': {e}")
 
 # Αυτόματη Λειτουργία
 def auto_tweet_and_comment():
     while True:
-        # Δημοσίευση στο προφίλ
         logging.info("Posting tweet to profile...")
         post_tweet()
-        time.sleep(3600)  # Αναμονή 1 ώρας
-
-        # Σχόλιο σε tweets άλλων
-        logging.info("Commenting on tweets...")
-        comment_on_tweets()
         time.sleep(3600)  # Αναμονή 1 ώρας
 
 if __name__ == "__main__":
